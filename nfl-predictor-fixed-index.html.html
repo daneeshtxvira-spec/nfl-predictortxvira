@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Azteca Vet NFL — Predictor</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#111827;--muted:#667085;--line:#e5e7eb;--green:#087443;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+.wrap{max-width:780px;margin:auto;padding:16px 12px 42px}.brand{display:flex;align-items:center;gap:10px;margin:5px 4px 18px}.logo{font-weight:900;font-size:29px}.brand b{font-size:20px;letter-spacing:2px}.brand small{display:block;color:var(--muted);font-size:8px;letter-spacing:1.4px}
+h1{font-size:29px;line-height:1.05;margin:0 0 6px}.sub{color:var(--muted);margin:0 0 18px;line-height:1.4}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:17px;margin:12px 0;box-shadow:0 2px 10px #00000008}
+h2{font-size:17px;margin:0 0 13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.full{grid-column:1/-1}
+label{font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:5px}
+input{width:100%;border:1px solid #d7dce2;border-radius:11px;padding:12px;font-size:16px;background:#fff}
+button{width:100%;border:0;border-radius:13px;padding:14px;font-size:16px;font-weight:800;background:#111827;color:#fff;margin-top:8px}
+button:disabled{opacity:.55}.hero{font-size:24px;font-weight:900;margin:3px 0}.pill{display:inline-block;border-radius:999px;padding:6px 10px;background:#eef0f3;font-weight:800;font-size:12px;margin:3px 3px 0 0}
+.row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:10px 0}.row:last-child{border:0}.val{font-weight:800;text-align:right}
+.bar{height:10px;background:#eceff2;border-radius:10px;overflow:hidden;margin-top:6px}.fill{height:100%;background:#111827}
+.note{font-size:12px;color:var(--muted);line-height:1.5}.status{font-size:13px;font-weight:700;margin-top:10px}.error{color:var(--red);font-weight:700;display:none}
+.ok{color:var(--green)}.loading{display:none;margin-top:10px;color:var(--muted);font-size:13px}
+.badge{font-size:11px;padding:5px 8px;border-radius:8px;background:#f0f2f5;color:#475467;font-weight:800}
+.mini{font-size:13px;color:var(--muted)}.result{display:none}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px 5px;border-bottom:1px solid var(--line)}th{color:var(--muted)}
+@media(max-width:480px){.grid{grid-template-columns:1fr 1fr}.wrap{padding-left:10px;padding-right:10px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="logo">Λ</div><div><b>AZTECA VET</b><small>ANÁLISIS NFL CON DATOS AUTOMÁTICOS</small></div></div>
+  <h1>Predictor NFL automático</h1>
+  <p class="sub">Escribe dos equipos. El programa busca sus datos reales y calcula nivel, cruce, localía, puntos proyectados, total, spread y pick.</p>
+
+  <div class="card">
+    <h2>🏈 Partido</h2>
+    <div class="grid">
+      <div class="full"><label>EQUIPOS</label><input id="matchupInput" placeholder="Chiefs vs Bills"></div>
+      <div class="full"><label>FECHA (opcional)</label><input id="date" type="date"></div>
+    </div>
+    <button id="go" onclick="analyze()">BUSCAR Y CALCULAR</button>
+    <div class="loading" id="loading">Obteniendo datos NFL…</div>
+    <div class="status error" id="err"></div>
+    <div class="status ok" id="ok"></div>
+    <p class="note">La página usa ESPN como fuente principal y un proxy de respaldo para evitar el error “Load failed” en GitHub Pages.</p>
+  </div>
+
+  <div class="card result" id="gameCard"><h2>Juego</h2>
+    <div class="hero" id="matchup"></div>
+    <div class="row"><span>Fecha</span><span class="val" id="gameDate"></span></div>
+    <div class="row"><span>Local</span><span class="val" id="home"></span></div>
+    <div class="row"><span>Visitante</span><span class="val" id="away"></span></div>
+  </div>
+
+  <div class="card result" id="statsCard"><h2>1. Nivel real de cada equipo</h2>
+    <table><thead><tr><th></th><th>Temporada</th><th>Últ. 10</th><th>Primeras 3</th></tr></thead>
+    <tbody><tr><td id="hn"></td><td id="hs"></td><td id="h10"></td><td id="h3"></td></tr>
+    <tr><td id="an"></td><td id="as"></td><td id="a10"></td><td id="a3"></td></tr></tbody></table>
+    <p class="mini" id="records"></p>
+  </div>
+
+  <div class="card result" id="modelCard"><h2>2. Cruce de los dos equipos</h2>
+    <div class="row"><span>Pythagorean — local</span><span class="val" id="ph"></span></div>
+    <div class="row"><span>Pythagorean — visitante</span><span class="val" id="pa"></span></div>
+    <div class="row"><span>Probabilidad neutral — local</span><span class="val" id="pn"></span></div>
+    <div class="row"><span>Probabilidad neutral — visitante</span><span class="val" id="pna"></span></div>
+  </div>
+
+  <div class="card result" id="homeCard"><h2>3. Ventaja de local</h2>
+    <div class="row"><span>Local después de localía</span><span class="val" id="pf"></span></div>
+    <div class="row"><span>Visitante después de localía</span><span class="val" id="pfa"></span></div>
+  </div>
+
+  <div class="card result" id="runsCard"><h2>4. Puntos proyectados y total</h2>
+    <div class="hero" id="proj"></div>
+    <div class="row"><span>Puntos locales proyectados</span><span class="val" id="hpts"></span></div>
+    <div class="row"><span>Puntos visitantes proyectados</span><span class="val" id="apts"></span></div>
+    <div class="row"><span>Total proyectado</span><span class="val" id="total"></span></div>
+    <div class="row"><span>Línea de referencia</span><span class="val" id="line"></span></div>
+  </div>
+
+  <div class="card result" id="ouCard"><h2>Over / Under</h2>
+    <div class="row"><span>Over  — referencia del modelo</span><span class="val" id="over"></span></div>
+    <div class="row"><span>Under — referencia del modelo</span><span class="val" id="under"></span></div>
+    <p class="note">Para que O/U sea realmente de mercado, después podemos añadir la línea real de sportsbook. Aquí se usa la línea proyectada del propio modelo.</p>
+  </div>
+
+  <div class="card result" id="spreadCard"><h2>5. Línea de puntos</h2>
+    <div class="row"><span id="favline"></span><span class="val" id="favprob"></span></div>
+    <div class="row"><span id="dogline"></span><span class="val" id="dogprob"></span></div>
+  </div>
+
+  <div class="card result" id="pickCard"><h2>🎯 Pick del modelo</h2>
+    <div class="hero" id="winner"></div>
+    <div id="pills"></div>
+  </div>
+
+  <div class="card result" id="allCard"><h2>Probabilidades</h2>
+    <div class="row"><span id="ml1"></span><span class="val" id="ml1p"></span></div>
+    <div class="row"><span id="ml2"></span><span class="val" id="ml2p"></span></div>
+    <div class="row"><span>Over</span><span class="val" id="op"></span></div>
+    <div class="row"><span>Under</span><span class="val" id="up"></span></div>
+    <div class="row"><span id="sp1"></span><span class="val" id="sp1p"></span></div>
+    <div class="row"><span id="sp2"></span><span class="val" id="sp2p"></span></div>
+  </div>
+
+  <div class="card result"><h2>🤖 Así funciona nuestro modelo</h2>
+    <p class="note">1) Nivel real: puntos anotados y permitidos. 2) Pythagorean: estima fuerza relativa. 3) Cruce: combina las probabilidades de ambos. 4) Localía: aplica una ventaja de 54/46 como referencia. 5) Puntos: combina ataque propio y defensa rival con el promedio de la NFL. 6) Spread: estima la probabilidad de cubrir -1.5/+1.5 usando una distribución normal. No sustituye lesiones, QB/inactivos, clima, descanso ni líneas reales.</p>
+  </div>
+</div>
+
+<script>
+const API='https://site.api.espn.com/apis/site/v2/sports/football/nfl';
+const PROXY='https://api.allorigins.win/raw?url=';
+const SEASON=(new Date().getMonth()+1<7)?new Date().getFullYear()-1:new Date().getFullYear();
+const teamAliases={
+'cardinals':'ARI','arizona':'ARI','falcons':'ATL','atlanta':'ATL','ravens':'BAL','baltimore':'BAL',
+'bills':'BUF','buffalo':'BUF','panthers':'CAR','carolina':'CAR','bears':'CHI','chicago':'CHI',
+'bengals':'CIN','cincinnati':'CIN','browns':'CLE','cleveland':'CLE','cowboys':'DAL','dallas':'DAL',
+'broncos':'DEN','denver':'DEN','lions':'DET','detroit':'DET','packers':'GB','green bay':'GB',
+'texans':'HOU','houston':'HOU','colts':'IND','indianapolis':'IND','jaguars':'JAX','jacksonville':'JAX',
+'chiefs':'KC','kansas city':'KC','chargers':'LAC','la chargers':'LAC','rams':'LAR','los angeles rams':'LAR',
+'raiders':'LV','las vegas':'LV','dolphins':'MIA','miami':'MIA','vikings':'MIN','minnesota':'MIN',
+'patriots':'NE','new england':'NE','saints':'NO','new orleans':'NO','giants':'NYG','ny giants':'NYG',
+'jets':'NYJ','ny jets':'NYJ','eagles':'PHI','philadelphia':'PHI','steelers':'PIT','pittsburgh':'PIT',
+'49ers':'SF','niners':'SF','san francisco':'SF','seahawks':'SEA','seattle':'SEA','buccaneers':'TB','tampa':'TB',
+'titans':'TEN','tennessee':'TEN','commanders':'WAS','washington':'WAS'
+};
+let teams=[];
+
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function pct(x){return (x*100).toFixed(1)+'%';}
+function clamp(x,a=.001,b=.999){return Math.max(a,Math.min(b,x));}
+function erf(x){const s=x<0?-1:1,a1=.254829592,a2=-.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=.3275911,t=1/(1+p*Math.abs(x));return s*(1-((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t*Math.exp(-x*x));}
+function normCDF(x,mean,sd){return .5*(1+erf((x-mean)/(sd*Math.sqrt(2))));}
+function py(rf,ra){if(rf<=0&&ra<=0)return .5; return Math.pow(rf,2.37)/(Math.pow(rf,2.37)+Math.pow(Math.max(ra,.01),2.37));}
+function log5(a,b){const d=a+b-2*a*b;return d?clamp((a-a*b)/d):.5;}
+function avg(arr){return arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0;}
+
+async function getJSON(url){
+  try{
+    const r=await fetch(url,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  }catch(e){
+    const r=await fetch(PROXY+encodeURIComponent(url),{cache:'no-store'});
+    if(!r.ok) throw new Error('Proxy HTTP '+r.status);
+    return await r.json();
+  }
+}
+async function loadTeams(){
+  if(teams.length)return teams;
+  const d=await getJSON(API+'/teams?limit=100');
+  const list=(d.sports?.[0]?.leagues?.[0]?.teams||[]).map(x=>x.team).filter(Boolean);
+  teams=list;
+  return list;
+}
+function findTeam(s){
+  const q=s.toLowerCase().trim();
+  const alias=teamAliases[q];
+  if(alias)return teams.find(t=>t.abbreviation===alias||t.slug===q);
+  return teams.find(t=>[t.displayName,t.name,t.abbreviation,t.shortDisplayName,t.location].filter(Boolean).some(v=>v.toLowerCase()===q))
+    || teams.find(t=>[t.displayName,t.name,t.abbreviation,t.shortDisplayName,t.location].filter(Boolean).some(v=>v.toLowerCase().includes(q)));
+}
+function parseInput(){
+  const raw=document.getElementById('matchupInput').value.trim();
+  const parts=raw.split(/\s+vs\.?\s+|\s+@\s+|\s+-\s+/i);
+  if(parts.length<2)throw new Error('Escribe el partido así: Chiefs vs Bills');
+  return [parts[0].trim(),parts[1].trim()];
+}
+async function scheduleFor(abbr){
+  return getJSON(API+'/teams/'+abbr+'/schedule?season='+SEASON+'&seasontype=2').then(d=>d.events||[]);
+}
+function completedGames(events){
+  return events.filter(e=>{
+    const c=e.competitions?.[0]; if(!c)return false;
+    const status=c.status?.type?.completed===true;
+    return status;
+  }).map(e=>{
+    const c=e.competitions[0], comps=c.competitors||[];
+    const us=comps.find(x=>x.team?.abbreviation);
+    const opp=comps.find(x=>x.team?.abbreviation && x!==us);
+    if(!us||!opp)return null;
+    const pf=Number(us.score), pa=Number(opp.score);
+    return {date:new Date(e.date),pf,pa,win:us.winner===true,home:us.homeAway==='home',oppa:opp.team.abbreviation};
+  }).filter(Boolean).sort((a,b)=>a.date-b.date);
+}
+function stats(games){
+  const first=games.slice(0,3), last=games.slice(-10);
+  const calc=a=>({pf:avg(a.map(g=>g.pf)),pa:avg(a.map(g=>g.pa)),n:a.length,w:a.filter(g=>g.win).length});
+  return {season:calc(games),first3:calc(first),last10:calc(last)};
+}
+function weighted(s){
+  const usable=s.season.n?(.55*s.season.pf+.30*s.last10.pf+.15*s.first3.pf):s.last10.pf;
+  const allowed=s.season.n?(.55*s.season.pa+.30*s.last10.pa+.15*s.first3.pa):s.last10.pa;
+  return {pf:usable,pa:allowed};
+}
+async function findGame(a,b,date){
+  const [ea,eb]=await Promise.all([scheduleFor(a.abbreviation),scheduleFor(b.abbreviation)]);
+  const events=ea.filter(e=>e.competitions?.[0]?.competitors?.some(c=>c.team?.abbreviation===b.abbreviation));
+  const dval=document.getElementById('date').value;
+  let e=events.find(x=>dval && x.date.slice(0,10)===dval) || events.find(x=>!dval && new Date(x.date)>=new Date());
+  if(!e)e=events.find(x=>!dval);
+  return e||null;
+}
+function show(id){document.getElementById(id).style.display='block';}
+function hideResults(){document.querySelectorAll('.result').forEach(x=>x.style.display='none');}
+function setErr(msg){const e=document.getElementById('err');e.textContent=msg;e.style.display='block';document.getElementById('ok').textContent='';}
+function clearMsg(){document.getElementById('err').style.display='none';document.getElementById('ok').textContent='';}
+async function analyze(){
+  const btn=document.getElementById('go'),load=document.getElementById('loading');
+  hideResults();clearMsg();btn.disabled=true;load.style.display='block';
+  try{
+    await loadTeams();
+    const [x,y]=parseInput(), a=findTeam(x), b=findTeam(y);
+    if(!a||!b)throw new Error('No encontré uno de los equipos. Usa nombres como Chiefs vs Bills o sus abreviaturas.');
+    const ev=await findGame(a,b);
+    let home=a,away=b;
+    if(ev){
+      const comps=ev.competitions[0].competitors;
+      const hc=comps.find(c=>c.homeAway==='home'), ac=comps.find(c=>c.homeAway==='away');
+      home=teams.find(t=>t.abbreviation===hc.team.abbreviation)||a;
+      away=teams.find(t=>t.abbreviation===ac.team.abbreviation)||b;
+    }
+    const [egH,egA]=await Promise.all([scheduleFor(home.abbreviation),scheduleFor(away.abbreviation)]);
+    const hg=completedGames(egH), ag=completedGames(egA);
+    if(hg.length<3||ag.length<3)throw new Error('Todavía no hay suficientes partidos completados para calcular el modelo.');
+    const hs=stats(hg), as=stats(ag), hw=weighted(hs), aw=weighted(as);
+    const lg=(hw.pf+hw.pa+aw.pf+aw.pa)/4;
+    const ph=py(hw.pf,hw.pa), pa=py(aw.pf,aw.pa);
+    const neutral=log5(ph,pa);
+    const homeP=clamp(neutral*(.54/.46)); const awayP=1-homeP;
+    const hproj=clamp((hw.pf+aw.pa)/2,.1,55), aproj=clamp((aw.pf+hw.pa)/2,.1,55);
+    const total=hproj+aproj, line=Math.round(total*2)/2;
+    const over=1-normCDF(line,total,13.5), under=1-over;
+    const favHome=homeP>=.5, fav=favHome?home:away, dog=favHome?away:home;
+    const diff=Math.abs(hproj-aproj);
+    const favCover=1-normCDF(1.5,diff,13.5);
+    const dogCover=1-favCover;
+    const opts=[
+      {n:home.displayName+' ML',p:homeP},{n:away.displayName+' ML',p:awayP},
+      {n:'Over '+line,p:over},{n:'Under '+line,p:under},
+      {n:fav.displayName+' -1.5',p:favCover},{n:dog.displayName+' +1.5',p:dogCover}
+    ].sort((u,v)=>v.p-u.p);
+    document.getElementById('matchup').textContent=home.displayName+' vs '+away.displayName;
+    document.getElementById('gameDate').textContent=ev?new Date(ev.date).toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'}):'Próximo juego / localía inferida';
+    document.getElementById('home').textContent=home.displayName;
+    document.getElementById('away').textContent=away.displayName;
+    document.getElementById('hn').textContent=home.displayName;document.getElementById('an').textContent=away.displayName;
+    document.getElementById('hs').textContent=hs.season.pf.toFixed(1)+' / '+hs.season.pa.toFixed(1);
+    document.getElementById('as').textContent=as.season.pf.toFixed(1)+' / '+as.season.pa.toFixed(1);
+    document.getElementById('h10').textContent=hs.last10.pf.toFixed(1)+' / '+hs.last10.pa.toFixed(1);
+    document.getElementById('a10').textContent=as.last10.pf.toFixed(1)+' / '+as.last10.pa.toFixed(1);
+    document.getElementById('h3').textContent=hs.first3.pf.toFixed(1)+' / '+hs.first3.pa.toFixed(1);
+    document.getElementById('a3').textContent=as.first3.pf.toFixed(1)+' / '+as.first3.pa.toFixed(1);
+    document.getElementById('records').textContent='Temporada: '+home.displayName+' '+hs.season.w+'-'+(hs.season.n-hs.season.w)+' | '+away.displayName+' '+as.season.w+'-'+(as.season.n-as.season.w)+' · Promedio NFL calculado: '+lg.toFixed(1)+' pts/equipo';
+    document.getElementById('ph').textContent=pct(ph);document.getElementById('pa').textContent=pct(pa);
+    document.getElementById('pn').textContent=pct(neutral);document.getElementById('pna').textContent=pct(1-neutral);
+    document.getElementById('pf').textContent=pct(homeP);document.getElementById('pfa').textContent=pct(awayP);
+    document.getElementById('proj').textContent=home.displayName+' '+hproj.toFixed(1)+' — '+aproj.toFixed(1)+' '+away.displayName;
+    document.getElementById('hpts').textContent=hproj.toFixed(1);document.getElementById('apts').textContent=aproj.toFixed(1);
+    document.getElementById('total').textContent=total.toFixed(1);document.getElementById('line').textContent=line.toFixed(1);
+    document.getElementById('over').textContent=pct(over);document.getElementById('under').textContent=pct(under);
+    document.getElementById('favline').textContent=fav.displayName+' -1.5';document.getElementById('favprob').textContent=pct(favCover);
+    document.getElementById('dogline').textContent=dog.displayName+' +1.5';document.getElementById('dogprob').textContent=pct(dogCover);
+    document.getElementById('winner').textContent=opts[0].n;
+    document.getElementById('pills').innerHTML=opts.slice(0,3).map(o=>'<span class="pill">'+esc(o.n)+' · '+pct(o.p)+'</span>').join('');
+    document.getElementById('ml1').textContent=home.displayName+' ML';document.getElementById('ml1p').textContent=pct(homeP);
+    document.getElementById('ml2').textContent=away.displayName+' ML';document.getElementById('ml2p').textContent=pct(awayP);
+    document.getElementById('op').textContent=pct(over);document.getElementById('up').textContent=pct(under);
+    document.getElementById('sp1').textContent=fav.displayName+' -1.5';document.getElementById('sp1p').textContent=pct(favCover);
+    document.getElementById('sp2').textContent=dog.displayName+' +1.5';document.getElementById('sp2p').textContent=pct(dogCover);
+    ['gameCard','statsCard','modelCard','homeCard','runsCard','ouCard','spreadCard','pickCard','allCard'].forEach(show);
+    document.getElementById('ok').textContent='Datos cargados correctamente.';
+  }catch(e){
+    setErr('Load failed: '+(e.message||'No se pudieron obtener los datos. Intenta otra vez.'));
+  }finally{btn.disabled=false;load.style.display='none';}
+}
+</script>
+</body>
+</html>

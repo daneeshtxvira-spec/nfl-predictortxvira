@@ -1,1 +1,0 @@
-# nfl-predictortxvira

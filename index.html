@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070a10">
+  <title>DANEESHTXVIRA PICKS — NFL</title>
+  <link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div class="brand">DANEESHTXVIRA <span>PICKS</span></div>
+      <div class="sub">NFL PREDICTOR</div>
+    </header>
+
+    <section class="selector card">
+      <div class="section-head">
+        <div><span class="eyebrow">PASO 1</span><h1>Elige los dos equipos</h1></div>
+        <button id="resetBtn" class="ghost small-btn" type="button">Limpiar</button>
+      </div>
+      <p class="hint">Toca primero un equipo y después el rival. No necesitas escribir nombres.</p>
+      <div id="teams" class="teams-grid" aria-label="Equipos NFL"></div>
+      <div class="selected-wrap">
+        <div class="selected-slot" id="slot1"><span>Equipo 1</span><b>Selecciona</b></div>
+        <div class="vs">VS</div>
+        <div class="selected-slot" id="slot2"><span>Equipo 2</span><b>Selecciona</b></div>
+      </div>
+      <label class="date-label">Fecha del partido (opcional)
+        <input id="fecha" type="date">
+      </label>
+      <button id="analizar" class="primary" type="button" disabled>ANALIZAR PARTIDO</button>
+    </section>
+
+    <div id="estado" role="status" aria-live="polite"></div>
+    <div id="resultado"></div>
+
+    <section class="card methodology">
+      <div class="eyebrow">MODELO</div>
+      <h2>Cómo se calcula</h2>
+      <div class="method-grid">
+        <div><b>01 · Fuerza</b><p>Pythagorean NFL con PF y PC y exponente 2.37.</p></div>
+        <div><b>02 · Forma</b><p>55% temporada, 30% últimos 10 y 15% primeras 3 jornadas.</p></div>
+        <div><b>03 · Cruce</b><p>Log5 para obtener una probabilidad neutral.</p></div>
+        <div><b>04 · Localía</b><p>Ajuste de 54% / 46% para la cancha.</p></div>
+        <div><b>05 · Puntos</b><p>Combina ataque propio y puntos permitidos por el rival.</p></div>
+        <div><b>06 · Mercados</b><p>ML, Over/Under y ±1.5 usando distribución normal.</p></div>
+      </div>
+      <p class="fineprint">Modelo matemático informativo. No incorpora automáticamente lesiones, inactivos, clima, cambios de QB ni movimientos de sportsbook.</p>
+    </section>
+  </main>
+  <script type="module" src="app.js?v=2"></script>
+</body>
+</html>
